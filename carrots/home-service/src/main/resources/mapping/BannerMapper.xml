@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jnshu.carrots.homeservice.dao.BannerMapper">
+  <resultMap id="BaseResultMap" type="com.jnshu.carrots.homeservice.model.Banner">
+    <id column="image_id" jdbcType="BIGINT" property="imageId" />
+    <result column="image_name" jdbcType="VARCHAR" property="imageName" />
+    <result column="image_url" jdbcType="VARCHAR" property="imageUrl" />
+    <result column="image_status" jdbcType="INTEGER" property="imageStatus" />
+    <result column="image_type" jdbcType="INTEGER" property="imageType" />
+    <result column="image_time" jdbcType="INTEGER" property="imageTime" />
+    <result column="image_jump_url" jdbcType="VARCHAR" property="imageJumpUrl" />
+    <result column="image_trade" jdbcType="INTEGER" property="imageTrade" />
+    <result column="create_name" jdbcType="VARCHAR" property="createName" />
+    <result column="create_time" jdbcType="BIGINT" property="createTime" />
+    <result column="update_name" jdbcType="VARCHAR" property="updateName" />
+    <result column="update_at" jdbcType="BIGINT" property="updateAt" />
+  </resultMap>
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.jnshu.carrots.homeservice.model.Banner">
+    <result column="image_caption" jdbcType="LONGVARCHAR" property="imageCaption" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    image_id, image_name, image_url, image_status, image_type, image_time, image_jump_url, 
+    image_trade, create_name, create_time, update_name, update_at
+  </sql>
+
+
+  <select id="selectByImageType" parameterType="java.lang.Integer" resultMap="ResultMapWithBLOBs">
+    select
+      image_id, image_time,image_url,image_jump_url
+    from banner
+    where image_type =#{imageType,jdbcType=INTEGER} AND image_status=0 ORDER BY update_at DESC limit #{count}
+  </select>
+
+
+</mapper>

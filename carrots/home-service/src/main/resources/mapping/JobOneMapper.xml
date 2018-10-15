@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jnshu.carrots.homeservice.dao.JobOneMapper">
+  <resultMap id="BaseResultMap" type="com.jnshu.carrots.homeservice.model.JobOne">
+    <id column="job_id" jdbcType="BIGINT" property="jobId" />
+    <result column="job_one_id" jdbcType="BIGINT" property="jonOneId" />
+    <result column="job_name" jdbcType="VARCHAR" property="jobName" />
+    <result column="job_company" jdbcType="VARCHAR" property="jobCompany" />
+    <result column="job_salary" jdbcType="INTEGER" property="jobSalary" />
+    <result column="job_priority" jdbcType="INTEGER" property="jobPriority" />
+    <result column="job_type" jdbcType="INTEGER" property="jobType" />
+    <result column="job_level" jdbcType="INTEGER" property="jobLevel" />
+    <result column="job_status" jdbcType="INTEGER" property="jobStatus" />
+    <result column="create_name" jdbcType="VARCHAR" property="createName" />
+    <result column="create_time" jdbcType="BIGINT" property="createTime" />
+    <result column="update_name" jdbcType="VARCHAR" property="updateName" />
+    <result column="update_at" jdbcType="BIGINT" property="updateAt" />
+    <result column="company_logo" jdbcType="VARCHAR" property="companyLogo" />
+    <result column="job_experience" jdbcType="INTEGER" property="jobExperience" />
+    <result column="job_education" jdbcType="INTEGER" property="jobEducation" />
+    <result column="job_caption" jdbcType="VARCHAR" property="jobCaption" />
+    <result column="job_requirement" jdbcType="VARCHAR" property="jobRequirement" />
+    <result column="job_welfare" jdbcType="VARCHAR" property="jobWelfare" />
+    <result column="company_id" jdbcType="BIGINT" property="companyId" />
+    <result column="company_area" jdbcType="VARCHAR" property="companyArea" />
+    <result column="company_tag" jdbcType="VARCHAR" property="companyTag" />
+    <result column="company_people" jdbcType="VARCHAR" property="companyPeople" />
+    <result column="company_trade" jdbcType="VARCHAR" property="companyTrade" />
+
+  </resultMap>
+  <sql id="Base_Column_List">
+    job_id, job_name, job_company, job_salary, job_priority, job_type, job_level, job_status,
+    create_name, create_time, update_name, update_at
+  </sql>
+
+
+  <select id="selectNewJob"  resultMap="BaseResultMap">
+    select a.job_id,a.job_name,a.job_company,b.company_logo
+    from job_one a inner join company_one b
+        on a.job_company = b.company_name
+           AND a.job_status = 0
+    ORDER BY a.update_at DESC limit 20;
+  </select>
+
+
+  <select id="selectRcmd" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select a.job_id,a.job_name,a.job_company,a.job_salary,b.company_logo
+    from job_one a inner join company_one b
+        on a.job_company = b.company_name
+           AND a.job_status = 0
+    ORDER BY a.job_priority ASC,a.update_at DESC limit #{count};
+  </select>
+
+
+  <select id="selectNewEight"  resultMap="BaseResultMap">
+    select a.job_id,a.job_name,a.job_company,a.job_salary,b.company_logo
+    from job_one a inner join company_one b
+        on a.job_company = b.company_name
+           AND a.job_status = 0
+    ORDER BY a.update_at DESC limit 8;
+  </select>
+
+
+  <select id="selectJobById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select a.update_at,a.job_name,a.job_company,a.job_salary,b.job_experience,b.job_education,b.job_caption,
+      b.job_requirement,b.job_welfare,c.company_id,c.company_logo,d.company_area,c.company_tag,c.company_people,
+      c.company_trade
+    FROM job_one a
+      INNER JOIN job_two b ON a.job_id=b.job_one_id
+      INNER JOIN company_one c ON a.job_company =c.company_name
+      INNER JOIN company_two d ON c.company_id = d.company_one_id
+    WHERE a.job_id= #{jobId,jdbcType=BIGINT};
+  </select>
+
+
+  <select id="selectJobAtCount"  parameterType="java.lang.String" resultType="java.lang.Integer">
+    SELECT COUNT(job_company)
+    FROM job_one
+    WHERE job_status=0 AND job_company= #{jobCompany,jdbcType=VARCHAR}
+  </select>
+
+
+  <select id="selectJobAtList"  parameterType="java.lang.String" resultMap="BaseResultMap">
+    SELECT a.job_id,a.job_name,a.job_salary,b.job_experience,b.job_education,a.update_at
+    FROM job_one a
+      INNER JOIN job_two b ON a.job_id=b.job_one_id
+    WHERE a.job_company= #{jobCompany,jdbcType=VARCHAR}
+  </select>
+
+
+  <select id="selectJobList"  parameterType="JobList" resultMap="BaseResultMap">
+    SELECT a.job_id,a.job_name,a.update_at,a.job_salary,a.job_company,
+    b.job_education,b.job_experience,
+    c.company_trade,c.company_logo,
+    d.company_area
+    FROM job_one a INNER JOIN job_two b ON a.job_id = b.job_one_id
+    INNER JOIN company_one c ON a.job_company=c.company_name
+    INNER JOIN company_two d ON c.company_id=d.company_one_id
+    <where>
+      c.company_status=0 AND a.job_status=0
+      <if test="updateAt !=null">
+        AND a.update_at >=#{updateAt}
+      </if>
+      <if test="jobName !=null">
+        AND a.job_name LIKE CONCAT('%',#{jobName},'%')
+      </if>
+      <if test="companyArea !=null">
+        AND d.company_area LIKE CONCAT('%',#{companyArea},'%')
+      </if>
+      <if test="companyTrade !=null">
+        <foreach collection="companyTrade" item="company" open="AND" separator="OR">
+          c.company_trade LIKE  CONCAT('%',#{company},'%')
+        </foreach>
+      </if>
+      <if test="jobType !=null">
+        <foreach collection="jobType" item="type" open="AND" separator="OR">
+          a.job_type LIKE  CONCAT('%',#{type},'%')
+        </foreach>
+      </if>
+      <if test="jobLevel !=null">
+        <foreach collection="jobLevel" item="level" open="AND" separator="OR">
+          a.job_level LIKE  CONCAT('%',#{level},'%')
+        </foreach>
+      </if>
+      <if test="jobEducation !=null">
+        <foreach collection="jobEducation" item="education" open="AND" separator="OR">
+          b.job_education LIKE  CONCAT('%',#{education},'%')
+        </foreach>
+      </if>
+      <if test="jobExperience!=null">
+        <foreach collection="jobExperience" item="experience" open="AND" separator="OR">
+          b.job_experience LIKE  CONCAT('%',#{experience},'%')
+        </foreach>
+      </if>
+      <if test="jobSalary!=null">
+        <foreach collection="jobSalary" item="salary" open="AND" separator="OR">
+          a.job_salary LIKE  CONCAT('%',#{salary},'%')
+        </foreach>
+      </if>
+    </where>
+    <if test="orderType !=null">
+      ORDER BY a.job_priority ASC, a.update_at DESC
+    </if>
+    <if test="orderType ==null">
+      ORDER BY  a.update_at DESC
+    </if>
+  </select>
+
+
+</mapper>

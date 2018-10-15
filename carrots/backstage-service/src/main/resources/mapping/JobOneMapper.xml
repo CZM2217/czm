@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jnshu.carrots.backstageservice.dao.JobOneMapper">
+  <resultMap id="BaseResultMap" type="com.jnshu.carrots.backstageservice.model.JobOne">
+    <id column="job_id" jdbcType="BIGINT" property="jobId" />
+    <result column="job_one_id" jdbcType="BIGINT" property="jonOneId" />
+    <result column="job_name" jdbcType="VARCHAR" property="jobName" />
+    <result column="job_company" jdbcType="VARCHAR" property="jobCompany" />
+    <result column="job_salary" jdbcType="INTEGER" property="jobSalary" />
+    <result column="job_priority" jdbcType="INTEGER" property="jobPriority" />
+    <result column="job_type" jdbcType="INTEGER" property="jobType" />
+    <result column="job_level" jdbcType="INTEGER" property="jobLevel" />
+    <result column="job_status" jdbcType="INTEGER" property="jobStatus" />
+    <result column="create_name" jdbcType="VARCHAR" property="createName" />
+    <result column="create_time" jdbcType="BIGINT" property="createTime" />
+    <result column="update_name" jdbcType="VARCHAR" property="updateName" />
+    <result column="update_at" jdbcType="BIGINT" property="updateAt" />
+    <result column="company_logo" jdbcType="VARCHAR" property="companyLogo" />
+    <result column="job_experience" jdbcType="INTEGER" property="jobExperience" />
+    <result column="job_education" jdbcType="INTEGER" property="jobEducation" />
+    <result column="job_caption" jdbcType="VARCHAR" property="jobCaption" />
+    <result column="job_requirement" jdbcType="VARCHAR" property="jobRequirement" />
+    <result column="job_welfare" jdbcType="VARCHAR" property="jobWelfare" />
+    <result column="company_area" jdbcType="VARCHAR" property="companyArea" />
+    <result column="company_tag" jdbcType="VARCHAR" property="companyTag" />
+    <result column="company_people" jdbcType="VARCHAR" property="companyPeople" />
+    <result column="company_trade" jdbcType="VARCHAR" property="companyTrade" />
+
+  </resultMap>
+  <sql id="Base_Column_List">
+    job_id, job_name, job_company, job_salary, job_priority, job_type, job_level, job_status,
+    create_name, create_time, update_name, update_at
+  </sql>
+
+
+  <select id="selectNewJob"  resultMap="BaseResultMap">
+    select a.job_id,a.job_name,a.job_company,b.company_logo
+    from job_one a inner join company_one b
+        on a.job_company = b.company_name
+           AND a.job_status = 0
+    ORDER BY a.update_at DESC limit 20;
+  </select>
+
+
+  <select id="selectRcmd" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select a.job_id,a.job_name,a.job_company,a.job_salary,b.company_logo
+    from job_one a inner join company_one b
+        on a.job_company = b.company_name
+           AND a.job_status = 0 ORDER BY a.job_priority ASC,a.update_at DESC limit #{count};
+  </select>
+
+
+  <select id="selectNewEight"  resultMap="BaseResultMap">
+    select a.job_id,a.job_name,a.job_company,a.job_salary,b.company_logo
+    from job_one a inner join company_one b
+        on a.job_company = b.company_name
+           AND a.job_status = 0 ORDER BY a.update_at DESC limit 8;
+  </select>
+
+
+  <select id="selectJobById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select a.update_at,a.job_name,a.job_company,a.job_salary,b.job_experience,b.job_education,b.job_caption,
+      b.job_requirement,b.job_welfare,c.company_id,c.company_logo,d.company_area,c.company_tag,c.company_people,
+      c.company_trade
+    FROM job_one a
+      INNER JOIN job_two b ON a.job_id=b.job_one_id
+      INNER JOIN company_one c ON a.job_company =c.company_name
+      INNER JOIN company_two d ON c.company_id = d.company_one_id
+    WHERE a.job_id= #{jobId,jdbcType=BIGINT};
+  </select>
+
+
+  <select id="selectJobAtCount"  parameterType="java.lang.String" resultType="java.lang.Integer">
+    SELECT COUNT(job_company)FROM job_one WHERE job_status=0 AND job_company= #{jobCompany,jdbcType=VARCHAR}
+  </select>
+
+
+  <select id="selectJobAtList"  parameterType="java.lang.String" resultMap="BaseResultMap">
+    SELECT a.job_id,a.job_name,a.job_salary,b.job_experience,b.job_education,a.update_at
+    FROM job_one a
+      INNER JOIN job_two b ON a.job_id=b.job_one_id
+    WHERE a.job_company= #{jobCompany,jdbcType=VARCHAR}
+  </select>
+
+
+  <select id="selectJobList"  parameterType="JobList" resultMap="BaseResultMap">
+    SELECT a.job_id,a.job_name,a.update_at,a.job_salary,a.job_company,
+    b.job_education,
+    c.company_trade,c.company_logo,
+    d.company_area
+    FROM job_one a INNER JOIN job_two b ON a.job_id = b.job_one_id
+    INNER JOIN company_one c ON a.job_company=c.company_name
+    INNER JOIN company_two d ON c.company_id=d.company_one_id
+    <where>
+      c.company_status=0 AND a.job_status=0
+      <if test="updateAt !=null">
+        AND a.update_at >=#{updateAt}
+      </if>
+      <if test="jobName !=null">
+        AND a.job_name LIKE CONCAT('%',#{jobName},'%')
+      </if>
+      <if test="companyArea !=null">
+        AND d.company_area LIKE CONCAT('%',#{companyArea},'%')
+      </if>
+      <if test="companyTrade !=null">
+        <foreach collection="companyTrade" item="company" open="AND" separator="OR">
+          c.company_trade LIKE  CONCAT('%',#{company},'%')
+        </foreach>
+      </if>
+      <if test="jobType !=null">
+        <foreach collection="jobType" item="type" open="AND" separator="OR">
+          a.job_type LIKE  CONCAT('%',#{type},'%')
+        </foreach>
+      </if>
+      <if test="jobLevel !=null">
+        <foreach collection="jobLevel" item="level" open="AND" separator="OR">
+          a.job_level LIKE  CONCAT('%',#{level},'%')
+        </foreach>
+      </if>
+      <if test="jobLevel !=null">
+        <foreach collection="jobLevel" item="level" open="AND" separator="OR">
+          a.job_level LIKE  CONCAT('%',#{level},'%')
+        </foreach>
+      </if>
+      <if test="jobEducation !=null">
+        <foreach collection="jobEducation" item="education" open="AND" separator="OR">
+          b.job_education LIKE  CONCAT('%',#{education},'%')
+        </foreach>
+      </if>
+      <if test="jobExperience!=null">
+        <foreach collection="jobExperience" item="experience" open="AND" separator="OR">
+          b.job_experience LIKE  CONCAT('%',#{experience},'%')
+        </foreach>
+      </if>
+      <if test="jobSalary!=null">
+        <foreach collection="jobSalary" item="salary" open="AND" separator="OR">
+          a.job_salary LIKE  CONCAT('%',#{salary},'%')
+        </foreach>
+      </if>
+    </where>
+    <if test="orderType !=null">
+      ORDER BY a.job_priority ASC, a.update_at DESC
+    </if>
+    <if test="orderType ==null">
+      ORDER BY  a.update_at DESC
+    </if>
+  </select>
+
+
+  <select id="selectBackJobList"  parameterType="JobOne" resultMap="BaseResultMap">
+    SELECT
+    a.job_id,a.job_name,a.update_at,a.job_salary,a.job_company,a.job_type,a.job_status,
+    b.job_education,b.job_experience
+    FROM job_one a
+    INNER JOIN job_two b ON a.job_id = b.job_one_id
+    <where>
+      <if test="createTime !=null">
+        AND a.create_time &gt;=#{timeFirst}
+      </if>
+      <if test="updateAt !=null">
+        AND a.update_at &lt;= #{timeLast}
+      </if>
+      <if test="jobCompany !=null">
+        AND a.job_company LIKE CONCAT('%',#{jobCompany},'%')
+      </if>
+      <if test="jobName !=null">
+        AND a.job_name LIKE CONCAT('%',#{jobName},'%')
+      </if>
+      <if test="jobType !=null">
+        AND a.job_type =#{JobType}
+      </if>
+      <if test="jobEducation !=null">
+        AND b.job_education =#{JobEducation}
+      </if>
+      <if test="jobExperience!=null">
+        AND b.job_experience =#{JobExperience}
+      </if>
+      <if test="jobSalary!=null">
+        AND a.job_salary =#{JobSalary}
+      </if>
+      <if test="jobStatus !=null">
+        AND a.job_status #{jobStatus}
+      </if>
+    </where>
+      ORDER BY  a.update_at DESC
+  </select>
+
+
+
+  <select id="selectBackJobById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select
+      a.job_id,a.job_name,a.update_at,a.job_salary,a.job_company,a.job_type,a.job_status,
+      a.job_priority,a.job_level,
+      b.job_education,b.job_experience,b.job_caption,b.job_requirement,b.job_welfare
+    FROM job_one a
+    INNER JOIN job_two b ON a.job_id=b.job_one_id
+    WHERE a.job_id= #{jobId,jdbcType=BIGINT};
+  </select>
+
+
+  <delete id="deleteById" parameterType="java.lang.Long">
+    DELETE a,b
+    FROM
+      job_one  a INNER JOIN job_two b
+        ON a.job_id=b.job_one_id
+    WHERE
+      a.job_id =#{jobId,jdbcType=BIGINT}
+  </delete>
+
+  <update id="updateStatusById" parameterType="JobOne">
+    update job_one
+    <set>
+      <if test="jobStatus != null">
+        job_status = #{jobStatus,jdbcType=INTEGER},
+      </if>
+      <if test="updateAt != null">
+        update_at = #{updateAt,jdbcType=BIGINT},
+      </if>
+    </set>
+    where job_id = #{jobId,jdbcType=BIGINT}
+  </update>
+
+
+  <update id="updateById" parameterType="JobOne">
+    UPDATE job_one a
+      INNER JOIN job_two b ON a.job_id = b.job_one_id
+    set a.job_name = #{jobName,jdbcType=VARCHAR},
+    a.job_priority = #{jobPriority,jdbcType=INTEGER},
+    a.job_salary = #{jobSalary,jdbcType=INTEGER},
+    a.job_type = #{jobType,jdbcType=INTEGER},
+    a.job_level = #{jobLevel,jdbcType=INTEGER},
+    a.update_name = #{updateName,jdbcType=VARCHAR},
+    a.update_at = #{updateAt,jdbcType=BIGINT},
+    b.job_experience=#{jobExperience,jdbcType=INTEGER},
+    b.job_education=#{jobEducation,jdbcType=INTEGER},
+    b.job_caption=#{jobCaption,jdbcType=VARCHAR},
+    b.job_requirement=#{jobRequirement,jdbcType=VARCHAR},
+    b.job_welfare=#{jobWelfare,jdbcType=VARCHAR}
+    where a.job_id = #{jobId,jdbcType=BIGINT}
+  </update>
+
+
+  <insert id="insertOne" parameterType="JobOne" useGeneratedKeys="true" keyProperty="jobId">
+    insert into job_one (job_name, job_company,
+    job_salary, job_priority, job_type,
+    job_level, create_name,
+    create_time, update_name, update_at
+    )
+    values (#{jobName,jdbcType=VARCHAR}, #{jobCompany,jdbcType=VARCHAR},
+    #{jobSalary,jdbcType=INTEGER}, #{jobPriority,jdbcType=INTEGER}, #{jobType,jdbcType=INTEGER},
+    #{jobLevel,jdbcType=INTEGER},#{createName,jdbcType=VARCHAR},
+    #{createTime,jdbcType=BIGINT}, #{updateName,jdbcType=VARCHAR}, #{updateAt,jdbcType=BIGINT}
+    )
+  </insert>
+
+
+  <insert id="insertTwo" parameterType="JobOne">
+    insert into job_two (job_one_id, job_experience,job_education,
+                         job_caption,job_requirement,job_welfare
+    )
+    values (#{jobOneId,jdbcType=BIGINT},#{jobExperience,jdbcType=INTEGER},
+            #{jobEducation,jdbcType=INTEGER},
+            #{jobCaption,jdbcType=VARCHAR},
+            #{jobRequirement,jdbcType=VARCHAR},
+            #{jobWelfare,jdbcType=VARCHAR}
+    )
+  </insert>
+
+
+
+</mapper>

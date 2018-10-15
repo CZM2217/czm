@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/backstage-service/backstage-service.iml" filepath="$PROJECT_DIR$/backstage-service/backstage-service.iml" />
+      <module fileurl="file://$PROJECT_DIR$/carrots.iml" filepath="$PROJECT_DIR$/carrots.iml" />
+      <module fileurl="file://$PROJECT_DIR$/eureka-server/eureka-server.iml" filepath="$PROJECT_DIR$/eureka-server/eureka-server.iml" />
+      <module fileurl="file://$PROJECT_DIR$/home-service/home-service.iml" filepath="$PROJECT_DIR$/home-service/home-service.iml" />
+    </modules>
+  </component>
+</project>

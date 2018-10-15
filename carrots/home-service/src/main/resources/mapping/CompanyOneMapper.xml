@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jnshu.carrots.homeservice.dao.CompanyOneMapper">
+  <resultMap id="BaseResultMap" type="com.jnshu.carrots.homeservice.model.CompanyOne">
+    <id column="company_id" jdbcType="BIGINT" property="companyId" />
+    <result column="company_name" jdbcType="VARCHAR" property="companyName" />
+    <result column="company_logo" jdbcType="VARCHAR" property="companyLogo" />
+    <result column="company_trade" jdbcType="VARCHAR" property="companyTrade" />
+    <result column="company_tag" jdbcType="VARCHAR" property="companyTag" />
+    <result column="company_aut" jdbcType="INTEGER" property="companyAut" />
+    <result column="company_people" jdbcType="VARCHAR" property="companyPeople" />
+    <result column="company_status" jdbcType="INTEGER" property="companyStatus" />
+    <result column="create_name" jdbcType="VARCHAR" property="createName" />
+    <result column="create_time" jdbcType="BIGINT" property="createTime" />
+    <result column="update_name" jdbcType="VARCHAR" property="updateName" />
+    <result column="update_at" jdbcType="BIGINT" property="updateAt" />
+    <result column="company_area" jdbcType="VARCHAR" property="companyArea" />
+    <result column="company_slogan" jdbcType="VARCHAR" property="companySlogan" />
+    <result column="company_size" jdbcType="INTEGER" property="companySize" />
+    <result column="company_product_name" jdbcType="VARCHAR" property="companyProductName" />
+    <result column="company_product_logo" jdbcType="VARCHAR" property="companyProductLogo" />
+    <result column="company_product_slogan" jdbcType="VARCHAR" property="companyProductSlogan" />
+    <result column="company_phone" jdbcType="VARCHAR" property="companyPhone" />
+    <result column="company_email" jdbcType="VARCHAR" property="companyEmail" />
+    <result column="company_addr" jdbcType="VARCHAR" property="companyAddr" />
+    <result column="company_map" jdbcType="VARCHAR" property="companyMap" />
+    <result column="company_caption" jdbcType="VARCHAR" property="companyCaption" />
+    <result column="company_product_caption" jdbcType="VARCHAR" property="companyProductCaption" />
+    <result column="job_name" jdbcType="VARCHAR" property="jobName" />
+    <result column="count_job" jdbcType="INTEGER" property="countJob" />
+
+  </resultMap>
+  <sql id="Base_Column_List">
+    company_id, company_name, company_logo, company_trade, company_tag, company_aut, 
+    company_people, company_status, create_name, create_time, update_name, update_at
+  </sql>
+
+
+
+  <select id="selectCommonCompany"  resultMap="BaseResultMap">
+    select company_id,company_logo
+    FROM company_one
+    WHERE company_aut=1
+    ORDER BY update_at DESC;
+  </select>
+
+
+  <select id="selectNewAutoneCompany"   resultMap="BaseResultMap">
+    select
+      a.company_id,a.company_name,a.company_trade,
+      b.company_size,b.company_area
+    FROM company_one a
+    INNER JOIN company_two b on a.company_id=b.company_one_id
+    WHERE a.company_aut =0  AND a.company_status =0
+    ORDER BY a.update_at DESC limit 1;
+  </select>
+
+
+  <select id="selectCompanyById" parameterType="java.lang.Long"  resultMap="BaseResultMap">
+    select a.company_id,a.company_name,a.company_logo,a.company_trade,
+    a.company_tag,a.company_aut,a.company_people,
+    b.company_slogan,b.company_area,b.company_caption,b.company_product_name,
+    b.company_product_logo,b.company_product_slogan,b.company_product_caption
+    FROM company_one a
+    INNER JOIN company_two b on a.company_id=b.company_one_id
+    WHERE a.company_id= #{companyId,jdbcType=BIGINT}
+  </select>
+
+
+  <select id="selectNewAutCompany"  parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    SELECT distinct a.company_id,a.company_logo,a.company_trade,a.company_name,
+      c.company_slogan,GROUP_CONCAT(b.job_name)job_name
+    FROM company_one a
+    LEFT JOIN job_one b ON a.company_name=b.job_company
+    INNER JOIN company_two c ON a.company_id=c.company_one_id
+    WHERE a.company_aut=0 AND a.company_status=0 AND b.job_status=0
+    GROUP BY a.company_name
+    ORDER BY b.update_at DESC LIMIT #{size};
+  </select>
+
+
+
+
+  <select id="selectCompanyList"  resultMap="BaseResultMap">
+    SELECT
+    a.company_id,a.company_name,a.company_logo,a.company_trade,
+    b.company_slogan,b.company_size,b.company_area,
+    COUNT(c.job_company) as count_job
+    FROM company_one a
+    INNER JOIN company_two b ON a.company_id=b.company_one_id
+    INNER JOIN job_one c ON a.company_name=c.job_company
+    <where>
+      a.company_status=0 AND c.job_status=0
+      <if test="companyName !=null">
+        AND a.company_name LIKE CONCAT('%',#{companyName},'%')
+      </if>
+      <if test="companyArea !=null">
+        AND b.company_area LIKE CONCAT('%',#{companyArea},'%')
+      </if>
+      <if test="companyTrade !=null">
+        <foreach collection="companyTrade" item="company" open="AND" separator="OR">
+          a.company_trade LIKE  CONCAT('%',#{company},'%')
+        </foreach>
+      </if>
+      <if test="companySize !=null">
+        <foreach collection="companySize" item="company" open="AND" separator="OR">
+          b.company_size LIKE  CONCAT('%',#{company},'%')
+        </foreach>
+      </if>
+    </where>
+    GROUP BY job_company
+    <if test="orderType !=null">
+      ORDER BY a.company_aut ASC, a.update_at DESC
+    </if>
+    <if test="orderType ==null">
+      ORDER BY  a.update_at DESC
+    </if>
+  </select>
+
+
+  <select id="selectCompanyFalse"  resultMap="BaseResultMap">
+    SELECT
+      a.company_id,a.company_name,a.company_logo,a.company_trade,
+      b.company_slogan,b.company_size,b.company_area,
+      COUNT(c.job_company) as count_job
+    FROM company_one a
+    INNER JOIN company_two b ON a.company_id=b.company_one_id
+    INNER JOIN job_one c ON a.company_name=c.job_company
+    WHERE a.company_status=0 AND c.job_status=0
+    GROUP BY c.job_company
+    ORDER BY a.update_name DESC
+    LIMIT 3
+  </select>
+
+
+</mapper>
